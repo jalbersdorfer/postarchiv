@@ -1,2 +1,93 @@
 # postarchiv
 Searchable Archive for scanned Paper Mail
+
+# Components
+Which Components are used
+
+- Raspberry Pi 4
+- [Sphinx Search Engine - v2.3.2-beta](http://sphinxsearch.com)
+- [Dancer2 Perl Web Framework](http://perldancer.org/)
+- [pdf2txt](https://linux.die.net/man/1/pdftotext)
+- [convert](https://linux.die.net/man/1/convert)
+
+## Sphinx
+Building/Compiling and installation
+
+```bash
+wget http://sphinxsearch.com/files/sphinx-2.3.2-beta.tar.gz
+tar -xzf sphinx-2.3.2-beta.tar.gz
+cd sphinx-2.3.2-beta
+./configure
+make
+sudo make install
+```
+
+sphinx.conf - `/usr/local/etc/sphinx.conf`
+```
+#
+# Minimal Sphinx configuration sample (clean, simple, functional)
+#
+
+index testrt
+{
+        type                    = rt
+        rt_mem_limit            = 128M
+
+        path                    = /var/data/testrt
+
+        rt_field                = content
+        rt_attr_uint            = gid
+        rt_attr_string          = title
+
+        expand_keywords         = 1
+}
+
+
+
+indexer
+{
+        mem_limit               = 128M
+}
+
+
+searchd
+{
+        listen                  = 9312
+        listen                  = 9306:mysql41
+        log                     = /var/log/searchd.log
+        query_log               = /var/log/query.log
+        read_timeout            = 5
+        max_children            = 30
+        pid_file                = /var/log/searchd.pid
+        seamless_rotate         = 1
+        preopen_indexes         = 1
+        unlink_old              = 1
+        workers                 = threads # for RT to work
+        binlog_path             = /var/data
+}
+```
+
+Start searchd
+```bash
+sudo searchd
+```
+
+Stop searchd
+```bash
+sudo searchd --stop
+```
+
+Search - via mysql
+```bash
+$sudo mysql -h 127.0.0.1 -P 9306
+> SELECT * FROM testrt WHERE MATCH ('stadtwerke');
++------------+------------+-----------------------------------------------------------------------------------+
+| id         | gid        | title                                                                             |
++------------+------------+-----------------------------------------------------------------------------------+
+|         29 |         29 | /root/ocred/scan_2020-01-31_075034.pdf                                            |
+| 1589537221 | 1589537221 | /media/myCloudDrive/ncdata/ncp/files/Documents/2020/01/scan_2020-01-31_075034.pdf |
+| 1589537109 | 1589537109 | /media/myCloudDrive/ncdata/ncp/files/Documents/scan_2019-06-06_181038.pdf         |
+| 1589537147 | 1589537147 | /media/myCloudDrive/ncdata/ncp/files/Documents/scan_2019-07-07_090424.pdf         |
++------------+------------+-----------------------------------------------------------------------------------+
+4 rows in set (0.002 sec)
+```
