@@ -1,6 +1,28 @@
 # postarchiv
 Searchable Archive for scanned Paper Mail
 
+## Featuers / Ideas
+
+Indexing:
+
+- Extract Text from PDF via `pdf2txt`
+- Save Text along with original pdf - separate path or just nameOfThe.pdf.txt
+- Extract Image/Thumbnail of first Page via `convert` Utility
+- Save Thumbnail along with original pdf - separate path or just nameOfThe.pdf.jpg
+- Index full Path to the Pdf and Content with `sphinx`
+- Maybe Extract Date and Time from Filename in bulk indexer
+- Store Date in the search index for later sorting
+- POST API to add new Files to the Index
+- GET API to download/get the stored files by 'key'
+
+Searching:
+
+- Build a WebApp using Dancer Perl Web Framework
+- Just like Google, just one single input field
+- Display Thumbnails of Search Results
+- maybe plus Text Excerpts
+- maybe option to sort by document date (from filename)
+
 # Components
 Which Components are used
 
