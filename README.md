@@ -113,3 +113,17 @@ $sudo mysql -h 127.0.0.1 -P 9306
 +------------+------------+-----------------------------------------------------------------------------------+
 4 rows in set (0.002 sec)
 ```
+
+## Perl CPAN Modules
+
+Install DBI
+
+```bash
+$ sudo apt-get install libdbd-mysql-perl
+```
+
+Install Dancer2
+
+```bash
+$ cpan Dancer2
+```
