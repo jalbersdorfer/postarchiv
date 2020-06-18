@@ -10,9 +10,11 @@ Indexing:
 - Extract Image/Thumbnail of first Page via `convert` Utility
 - Save Thumbnail along with original pdf - separate path or just nameOfThe.pdf.jpg
 - Index full Path to the Pdf and Content with `sphinx`
+- Index Title and Tags from the PDF File Meta Data (extracted using `exiftool`)
 - Maybe Extract Date and Time from Filename in bulk indexer
 - Store Date in the search index for later sorting
 - POST API to add new Files to the Index
+- PATCH API to update Title and Tags
 - GET API to download/get the stored files by 'key'
 
 Searching:
@@ -23,6 +25,10 @@ Searching:
 - maybe plus Text Excerpts
 - maybe option to sort by document date (from filename)
 
+Additional Information
+
+- Option to edit Title and Tags of the PDF Files (PDF File Metadata - using exiftool)
+
 # Components
 Which Components are used
 
@@ -31,6 +37,7 @@ Which Components are used
 - [Dancer2 Perl Web Framework](http://perldancer.org/)
 - [pdf2txt](https://linux.die.net/man/1/pdftotext)
 - [convert](https://linux.die.net/man/1/convert)
+- [exiftool](https://exiftool.org/) `sudo apt install libimage-exiftool-perl`
 
 ## Sphinx
 Building/Compiling and installation
@@ -126,4 +133,16 @@ Install Dancer2
 
 ```bash
 $ cpan Dancer2
+```
+
+## Exiftool
+
+To Read and Modify **Title** and **Tags** of the PDF File
+
+```bash
+$ exiftool -Title="This is a really greate Title" -Keywords="This, Are, Some, Really, Greate, Tags" scan_2020-01-31_075034.pdf
+    1 image files updated
+pi@pi:~ $ exiftool -Title -Keywords scan_2020-01-31_075034.pdf
+Title      : This is a really greate Title
+Keywords   : This, Are, Some, Really, Greate, Tags
 ```
