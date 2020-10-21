@@ -1,0 +1,6 @@
+<p>Hi there, I found [% cnt %] Documents.</p>
+<ul>
+    [% FOREACH doc IN docs %]
+        <li>[% doc.title %]</li>
+    [% END %]
+</ul>

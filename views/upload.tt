@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>ELDOAR Search</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <style type="text/css">
+      .fullwidth {
+        width:90%;
+	max-width: 540px;
+      }
+      .center {
+        margin:auto;
+      }
+      .nodeco {
+        text-decoration: none;
+      }
+  </style>
+  </head>
+  <body>
+<div class="container">
+  <div class="row">
+    <div class="col center" align="center">
+      <a href="/" class="nodeco">
+      <pre>
+
+_______        ______   _____  _______  ______
+|______ |      |     \ |     | |_____| |_____/
+|______ |_____ |_____/ |_____| |     | |    \_
+ 
+Electronic Document Archive
+</pre>
+</a>
+
+    </div>
+  </div>
+  <div class="row justify-content-md-center">
+    <div class="col fullwidth center" align="center">
+      <form action="/upload" method="post">
+      <div class="form-group">
+        <input type="file" accept="pdf" class="fullwidth" autofocus="autofocus" id="data" name="data" />
+        </div>
+        
+        <input type="submit" formenctype="multipart/form-data" class="btn btn-primary" value="Upload" />
+      </form>
+<a href="/"><pre>Search</pre></a>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+
