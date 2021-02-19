@@ -50,11 +50,25 @@ get '/file/**' => sub {
 del '/file/:id' => sub {
     debug 'delete /file/' . route_parameters->get('id');
     my $dbh = DBI->connect("dbi:mysql:database=;host=127.0.0.1;port=9306", "", "", {mysql_no_autocommit_cmd => 1});
-    my $sth = $dbh->prepare('SELECT * FROM testrt WHERE id = ?;')
-        or die "prepare statement failed: $dbh->errstr()";
+    # $dbh->trace(5);
+    # my $sth = $dbh->prepare('SELECT * FROM testrt WHERE id = ?;')
+    #     or die "prepare statement failed: $dbh->errstr()";
+    # my @params = (123);
     # $sth->execute(int(route_parameters->get('id'))) or die "execute failed: $dbh->errstr()";
-    $sth->execute(1596377743000) or die "execute failed: $dbh->errstr()";
-    debug $sth->fetchall_arrayref({});
+    # $sth->execute(@params) or die "execute failed: $dbh->errstr()";
+    # debug $sth->fetchall_arrayref({});
+    my $id = int(route_parameters->get('id'));
+    my $rv = $dbh->selectall_arrayref( "SELECT * FROM testrt WHERE id = $id" ) or die "execute failed: $dbh->errstr()";
+    # -v-v-v- THE CODE below WORKS! -v-v-v- : It is commented to prevent unintended delete until a 2nd Questions is impmented"
+    # my $rows = $dbh->do("DELETE FROM testrt WHERE id = $id") or die "delete failed: $dbh->errstr()";
+    # debug "DELETED $rows Rows(s)";
+    my @arv = @{$rv};
+    debug @arv;
+    my $dbid = $rv->[0]->[0];
+    my $dbtim = $rv->[0]->[1];
+    my $dbpath = $rv->[0]->[2];
+    "Would have deleted File id: $dbid, timestamp: $dbtim, path: $dbpath";
+    # TODO: Add code to move the Files to a "Recycle Bin"
 };
 
 # Upload a File via CURL
