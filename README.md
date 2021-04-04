@@ -146,3 +146,9 @@ pi@pi:~ $ exiftool -Title -Keywords scan_2020-01-31_075034.pdf
 Title      : This is a really greate Title
 Keywords   : This, Are, Some, Really, Greate, Tags
 ```
+
+# Further reading
+
+other Sites I found useful Information on.
+
+- [Asela Fernando: Raspberry Pi Scanner Server with ArchLinuxArm](https://www.aselafernando.com/blog/2020/08/23)
