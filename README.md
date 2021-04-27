@@ -153,3 +153,4 @@ other Sites I found useful Information on.
 
 - [Asela Fernando: Raspberry Pi Scanner Server with ArchLinuxArm](https://www.aselafernando.com/blog/2020/08/23)
 - [Sane Project](https://gitlab.com/sane-project)
+- [Image Scanner Driver for LinuxUser's Guide](http://origin.pfultd.com/downloads/IMAGE/fi/ubuntu/210/ImageScannerDriver4Linux-UG_SP04.pdf)
