@@ -8,7 +8,7 @@ use POSIX qw(strftime);
 # my $dbh = DBI->connect($dsn, $user, $password);
  
 get '/' => sub {
-    my $dbh = DBI->connect("dbi:mysql:database=;host=127.0.0.1;port=9306", "", "",
+    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "",
 	{mysql_no_autocommit_cmd => 1});
 
     my %query_parameters = params('query');
@@ -22,8 +22,9 @@ get '/' => sub {
     
     template 'index.tt', { search => query_parameters->get('search'), cnt => $sth->rows, docs => $sth->fetchall_arrayref({}) };
     } else {
+	my $limit = $ENV{'OVERVIEW_LIMIT'} || "9";
 	my $sth = $dbh->prepare(
-	    'SELECT * FROM testrt ORDER BY id DESC LIMIT 10;')
+	    "SELECT * FROM testrt ORDER BY id DESC LIMIT $limit;")
         or die "prepare statement failed: $dbh->errstr()";
     $sth->execute() or die "execution failed: $dbh->errstr()";
     
@@ -49,7 +50,7 @@ get '/file/**' => sub {
 
 del '/file/:id' => sub {
     debug 'delete /file/' . route_parameters->get('id');
-    my $dbh = DBI->connect("dbi:mysql:database=;host=127.0.0.1;port=9306", "", "", {mysql_no_autocommit_cmd => 1});
+    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1});
     # $dbh->trace(5);
     # my $sth = $dbh->prepare('SELECT * FROM testrt WHERE id = ?;')
     #     or die "prepare statement failed: $dbh->errstr()";
@@ -60,8 +61,8 @@ del '/file/:id' => sub {
     my $id = int(route_parameters->get('id'));
     my $rv = $dbh->selectall_arrayref( "SELECT * FROM testrt WHERE id = $id" ) or die "execute failed: $dbh->errstr()";
     # -v-v-v- THE CODE below WORKS! -v-v-v- : It is commented to prevent unintended delete until a 2nd Questions is impmented"
-    # my $rows = $dbh->do("DELETE FROM testrt WHERE id = $id") or die "delete failed: $dbh->errstr()";
-    # debug "DELETED $rows Rows(s)";
+    my $rows = $dbh->do("DELETE FROM testrt WHERE id = $id") or die "delete failed: $dbh->errstr()";
+    debug "DELETED $rows Rows(s)";
     my @arv = @{$rv};
     debug @arv;
     my $dbid = $rv->[0]->[0];
@@ -79,14 +80,15 @@ del '/file/:id' => sub {
 # $ curl -F 'foo[]=@path/to/file' -F 'foo[]=@path/to/file2' foo.bar/upload 
 post '/upload' => sub {
     debug '/upload';
-    my $dbh = DBI->connect("dbi:mysql:database=;host=127.0.0.1;port=9306", "", "",
+    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "",
 	{mysql_no_autocommit_cmd => 1});
     my $i = 1;
     my $all_uploads = request->uploads;
+    my $home = $ENV{'ELDOAR_HOME'} || '/app';
     my $path = strftime "data/files/%Y/%m/", localtime;
-    make_path($path, {verbose => 1});
+    make_path("$home/" . $path, {verbose => 1});
     foreach (values %{$all_uploads}) {
-        my $filepath = $path . $_->filename;
+        my $filepath = "$home/" . $path . $_->filename;
         debug 'Save upload to ' . $filepath;
         $_->copy_to($filepath);
 
@@ -109,7 +111,7 @@ post '/upload' => sub {
         ) or die "execution failed: $dbh->errstr()";
         my $firstpagefp = $filepath . '[0]';
         my $jpgfilepath = $filepath . '.jpg';
-        $cmd = "convert '$firstpagefp' '$jpgfilepath'";
+        $cmd = "convert -background white -alpha remove -alpha off '$firstpagefp' '$jpgfilepath'";
         debug $cmd;
         my $output = `$cmd`;
     };

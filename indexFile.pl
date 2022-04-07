@@ -4,7 +4,7 @@ use File::Basename;
 use File::Path qw(make_path);
 use POSIX qw(strftime);
  
-my $dbh = DBI->connect("dbi:mysql:database=;host=127.0.0.1;port=9306", "", "",
+my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "",
 	{mysql_no_autocommit_cmd => 1});
 # Upload a File via CURL
 # $ curl -F 'foo=@path/to/local/file' http://foo.bar/upload
@@ -17,10 +17,16 @@ foreach $filepath(@ARGV) {
     my $cmd = "pdf2txt '$filepath' | sed 's/\\x27/ /g' | tee '$txtfilepath'";
     printf $cmd;
     my $content = `$cmd`;
+    my $contentlen = length $content;
+    if ($contentlen < 10)
+    {
+        `ocrmypdf -l deu -dc $filepath $filepath`;
+	$content = `$cmd`;
+    }
     my $sth = $dbh->prepare(
         'INSERT INTO testrt (id, gid, title, content) VALUES (?,?,?,?)'
     ) or die "prepare statement failed: $dbh->errstr()";
-    my $pk = time() * 1000 + $i++;
+    my $pk = time() * 1000 + int(rand(900)) + $i++;
     $filepath =~ m/data\/files.*$/;
     $sth->execute(
         $pk, $pk, $&, $content
