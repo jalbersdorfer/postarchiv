@@ -18,7 +18,7 @@ RUN sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xm
 RUN mkdir -p /app/data /app/public /app/import
 RUN ln -s /app/data /app/public/data
 RUN echo 'root' > /etc/incron.allow
-RUN echo '/app/import/ IN_CREATE /app/importFile.sh $@/$#' >> /etc/incron.d/app-import
+RUN echo '/app/import/ IN_CLOSE_WRITE /app/importFile.sh $@/$#' >> /etc/incron.d/app-import
 RUN apt-get install -y img2pdf
 
 ENV SPHINX_HOST=127.0.0.1
