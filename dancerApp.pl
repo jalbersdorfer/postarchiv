@@ -8,6 +8,8 @@ use POSIX qw(strftime);
 # my $dbh = DBI->connect($dsn, $user, $password);
  
 get '/' => sub {
+    my $limit = $ENV{'OVERVIEW_LIMIT'} || "18";
+    my $order = $ENV{'OVERVIEW_ORDER'} || "DESC";
     my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "",
 	{mysql_no_autocommit_cmd => 1});
 
@@ -16,20 +18,19 @@ get '/' => sub {
     {
     # return query_parameters->get('q');
 	my $sth = $dbh->prepare(
-	    'SELECT * FROM testrt WHERE MATCH(?) ORDER BY id DESC LIMIT 200;')
+	    "SELECT * FROM testrt WHERE MATCH(?) ORDER BY id $order LIMIT $limit;")
         or die "prepare statement failed: $dbh->errstr()";
     $sth->execute(query_parameters->get('search')) or die "execution failed: $dbh->errstr()";
     
     template 'index.tt', { search => query_parameters->get('search'), cnt => $sth->rows, docs => $sth->fetchall_arrayref({}) };
     } else {
-	my $limit = $ENV{'OVERVIEW_LIMIT'} || "9";
 	my $sth = $dbh->prepare(
-	    "SELECT * FROM testrt ORDER BY id DESC LIMIT $limit;")
+	    "SELECT * FROM testrt ORDER BY id $order LIMIT $limit;")
         or die "prepare statement failed: $dbh->errstr()";
     $sth->execute() or die "execution failed: $dbh->errstr()";
     
 # template 'index.tt', { };
-        template 'index.tt', { search => 'Last 10', cnt => $sth->rows, docs => $sth->fetchall_arrayref({}) };
+        template 'index.tt', { search => "Last $limit", cnt => $sth->rows, docs => $sth->fetchall_arrayref({}) };
     }
     # return $sth->rows . " Documents found.\n";
     # return 'Hello World!';
