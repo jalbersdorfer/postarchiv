@@ -1,2 +1,3 @@
 #!/bin/bash
-incrond && perl ./dancerApp.pl
+./importFiles.sh &
+perl ./dancerApp.pl

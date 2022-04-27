@@ -20,8 +20,8 @@ foreach $filepath(@ARGV) {
     my $contentlen = length $content;
     if ($contentlen < 10)
     {
-        `ocrmypdf -l deu -dc $filepath $filepath`;
-	$content = `$cmd`;
+        `ocrmypdf -l deu -dc '$filepath' '$filepath'`;
+	      $content = `$cmd`;
     }
     my $sth = $dbh->prepare(
         'INSERT INTO testrt (id, gid, title, content) VALUES (?,?,?,?)'

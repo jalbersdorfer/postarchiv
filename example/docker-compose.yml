@@ -1,0 +1,48 @@
+####################################################################################
+# docker-compose file for ElDoAr
+# created by Jrgn 2022-04-13
+#
+# ElDoAr is a fulltext searchable Electronic Document Archive written in Perl and Dancer. 
+# ####################################################################################
+#
+# version            date              comment
+# 1.0                2022-03-13        initial release
+####################################################################################
+
+version: '2.0'
+
+# networks
+# create a network 'guacnetwork_compose' in mode 'bridged'
+networks:
+  eldoar-net:
+    driver: bridge
+
+# services
+services:
+  sphinx:
+    container_name: eldoar-sphinx
+    image: jrgn/sphinx-search:2.3.2-jessie
+    networks:
+      - eldoar-net
+    restart: always
+    volumes:
+    - ./sphinx/conf/sphinx.conf:/etc/sphinxsearch/sphinx.conf:ro
+    - ./sphinx/data:/var/data:Z
+  eldoar:
+    container_name: eldoar-app
+    environment:
+      SPHINX_HOST: eldoar-sphinx
+      OVERVIEW_LIMIT: 9
+      OVERVIEW_ORDER: DESC
+    image: jrgn/postarchiv:buster
+    links:
+      - sphinx
+    networks:
+      - eldoar-net
+    restart: always
+    ports:
+    - 3002:3000
+    volumes:
+    - ./eldoar/data:/app/data:Z
+    - ./eldoar/import:/app/import:Z
+
