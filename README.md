@@ -147,6 +147,51 @@ Title      : This is a really greate Title
 Keywords   : This, Are, Some, Really, Greate, Tags
 ```
 
+# HowTo get your Scanner working
+
+I use a Fujitsu fi-6140 Scanner connected to a RaspberryPi Zero (2 W) which runs Arch Linux ARM.  
+
+This Scanner has a couple of Buttons on its body, which can be used with `scanbd` (Scanner Button Deamon).  
+
+I installed the `scanbd` from the `AUR` Respository using `trizen`.
+
+The scanner did not work in the first place on the `Raspberry Pi Zero 2 W` but had not a single issue on the `Raspberry Pi Zero`.  
+This might be because the `Raspberry Pi Zero` runs `ArchLinux ARM 32`, while the `Raspberry Pi Zero 2-W` is powered by `ArchLinux ARM for armv7h`.
+
+The issue on the `RaspberryPi Zero 2-W` was, that the USB Device was installed just for `root`.  
+```shell
+# lsusb
+Bus 001 Device 004: ID 04c5:11f1 Fujitsu, Ltd 
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+
+# ls -lha /dev/bus/usb/001/
+total 0
+drwxr-xr-x  2 root root        80 Dec  2 19:47 .
+drwxr-xr-x  3 root root        60 Jan  1  1970 ..
+crw-rw-r--  1 root root    189, 0 Nov 29 13:51 001
+crw-rw-r--+ 1 root root    189, 3 Dec  2 19:54 004
+```
+
+To fix this, I created a `/etc/udev/rules.d/40-scanner.rules` file with the following content:  
+(the `idVendor` and `idProduct` Numbers are taken from the output of the `lsusb` command.)
+```
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="04c5", ATTRS{idProduct}=="11f1", ENV{libsane_matched}="yes", GROUP="scanner"
+```
+
+then I unplugged and re-plugged the scanner and checked the device files again:
+
+```shell
+# ls -lha /dev/bus/usb/001/
+total 0
+drwxr-xr-x  2 root root        80 Dec  2 19:54 .
+drwxr-xr-x  3 root root        60 Jan  1  1970 ..
+crw-rw-r--  1 root root    189, 0 Nov 29 13:51 001
+crw-rw----+ 1 root scanner 189, 4 Dec  2 19:54 005
+```
+
+Even without restarting the `scanbd` Service, the buttons worked immediatelly.  
+
+
 # Further reading
 
 other Sites I found useful Information on.
