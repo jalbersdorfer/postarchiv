@@ -2,6 +2,7 @@
 use Dancer2;
 use DBI;
 use File::Path qw(make_path);
+use File::Copy;
 use POSIX qw(strftime);
  
 # my $dsn = "DBI:mysql:database=$database;host=localhost;port=9306";
@@ -70,7 +71,10 @@ del '/file/:id' => sub {
     my $dbtim = $rv->[0]->[1];
     my $dbpath = $rv->[0]->[2];
     "Would have deleted File id: $dbid, timestamp: $dbtim, path: $dbpath";
-    # TODO: Add code to move the Files to a "Recycle Bin"
+    # Move the Files to a "Recycle Bin"
+    move("$dbpath", "$dbpath.deleted");
+    move("$dbpath.jpg", "$dbpath.jpg.deleted");
+    move("$dbpath.txt", "$dbpath.txt.deleted");
 };
 
 # Upload a File via CURL

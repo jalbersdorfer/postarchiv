@@ -1,6 +1,15 @@
 # postarchiv
 Searchable Archive for scanned Paper Mail
 
+## Configuration of the Docker Image
+
+You can provide the following Environment Variables to configure the App.  
+
+- `SPHINX_HOST`: Hostname of the Sphinx Server
+- `OVERVIEW_LIMIT`: How much *last* items will be shown at StartPage. Default = 18
+- `OVERVIEW_ORDER`: SortOrder of the StartPage. Either ASC or DESC. Default = DESC
+- `ELDOAR_REMOVE_DELTED_AFTER_DAYS`: Days after when deleted Files will be really removed. Unconfigured means never.
+
 ## Featuers / Ideas
 
 Indexing:
