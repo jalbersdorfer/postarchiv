@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>ELDOAR Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+        .fullwidth { width:90%; max-width: 540px; }
+        .center { margin:auto; }
+        .nodeco { text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="navbar navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a href="/" class="navbar-brand d-flex align-items-center">
+                <strong>ELDOAR Admin</strong>
+            </a>
+        </div>
+    </div>
+</header>
+
+<main>
+    <section class="py-5 text-center container">
+        <div class="row py-lg-5">
+            <div class="col-lg-6 col-md-8 mx-auto">
+                <a href="/" class="nodeco">
+                    <pre>
+_______       ______   ____  ______  _____
+|______ |     |     \ |    | |____| |____/
+|______ |____ |_____/ |____| |    | |   \_
+
+Electronic Document Archive - Admin
+                    </pre>
+                </a>
+
+                <div class="alert alert-info" role="alert">
+                    <strong>[% doc_count %]</strong> documents in index
+                </div>
+
+                <h3 class="my-4">Reindex Database</h3>
+                <p class="text-muted">
+                    This will clear the existing Sphinx index and rebuild it from
+                    the filesystem. Document IDs will be regenerated based on file dates.
+                </p>
+
+                <form action="/admin/reindex" method="post">
+                    <button type="submit" class="btn btn-warning btn-lg my-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-repeat" viewBox="0 0 16 16">
+                            <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+                            <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+                        </svg>
+                        Start Reindex
+                    </button>
+                </form>
+
+                <div class="alert alert-warning my-4" role="alert">
+                    <strong>Warning:</strong> This operation will delete all existing index data.
+                </div>
+
+                <a href="/" class="btn btn-secondary my-2">Back to Search</a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="text-muted py-5">
+    <div class="container">
+        <p class="mb-1">ELDOAR Search &copy; 2024</p>
+    </div>
+</footer>
+
+<script src="./js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

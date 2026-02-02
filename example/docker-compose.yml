@@ -9,7 +9,7 @@
 # 1.0                2022-03-13        initial release
 ####################################################################################
 
-version: '2.0'
+# version: '2.0'
 
 # networks
 # create a network 'guacnetwork_compose' in mode 'bridged'
@@ -19,30 +19,49 @@ networks:
 
 # services
 services:
+  manticore:
+    container_name: eldoar-manticore
+    image: manticoresearch/manticore
+    networks:
+      - eldoar-net
+    ports:
+      - 13306:3306
+      - 19306:9306
+      - 19312:9312
+      - 19308:9308
+    restart: always
+    volumes:
+    - ./manticore/conf/manticore.conf:/etc/manticoresearch/manticore.conf:Z
+    - ./manticore/data:/var/lib/manticore:Z
   sphinx:
     container_name: eldoar-sphinx
     image: jrgn/sphinx-search:2.3.2-jessie
     networks:
       - eldoar-net
+    ports:
+      - 3306:3306
+      - 9306:9306
+      - 9312:9312
+      - 9308:9308
     restart: always
     volumes:
     - ./sphinx/conf/sphinx.conf:/etc/sphinxsearch/sphinx.conf:ro
     - ./sphinx/data:/var/data:Z
-  eldoar:
-    container_name: eldoar-app
-    environment:
-      SPHINX_HOST: eldoar-sphinx
-      OVERVIEW_LIMIT: 9
-      OVERVIEW_ORDER: DESC
-    image: jrgn/postarchiv:buster
-    links:
-      - sphinx
-    networks:
-      - eldoar-net
-    restart: always
-    ports:
-    - 3002:3000
-    volumes:
-    - ./eldoar/data:/app/data:Z
-    - ./eldoar/import:/app/import:Z
+#  eldoar:
+#    container_name: eldoar-app
+#    environment:
+#      SPHINX_HOST: eldoar-sphinx
+#      OVERVIEW_LIMIT: 9
+#      OVERVIEW_ORDER: DESC
+#    image: jrgn/postarchiv:buster
+#    links:
+#      - sphinx
+#    networks:
+#      - eldoar-net
+#    restart: always
+#    ports:
+#    - 3002:3000
+#    volumes:
+#    - ./eldoar/data:/app/data:Z
+#    - ./eldoar/import:/app/import:Z
 
