@@ -4,8 +4,7 @@ use File::Basename;
 use File::Path qw(make_path);
 use POSIX qw(strftime);
  
-my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "",
-	{mysql_no_autocommit_cmd => 1});
+my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1}) or die "Cannot connect to Sphinx: $DBI::errstr";
 # Upload a File via CURL
 # $ curl -F 'foo=@path/to/local/file' http://foo.bar/upload
 # Upload multiple Files via CURL

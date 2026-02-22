@@ -22,3 +22,15 @@ build:
 ```
 
 When in doubt about file locations, always verify with Read or Glob before making changes.
+
+## DBD::mysql vs DBD::MariaDB for Sphinx/Manticore
+
+**Never use DBD::MariaDB with Sphinx or Manticore.**
+
+DBD::MariaDB sends initialization SQL (SET character_set_server, etc.) that
+Sphinx/Manticore don't support. These can't be suppressed.
+
+**Correct approach:**
+- Use `DBD::mysql` (compiles fine against `libmariadb-dev`)
+- Use `{mysql_no_autocommit_cmd => 1}` to suppress initialization SQL
+- DSN: `dbi:mysql:database=;host=...;port=9306`
