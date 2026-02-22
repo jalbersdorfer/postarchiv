@@ -1,17 +1,17 @@
 # FROM perl:latest
-#      perl:5.34-bullseye <== does not have incrond
-#      perl:5.34-buster   <== would have incrond, but is oldstable
+#      perl:5.34-bullseye <== does not have incrond (deprecated)
+#      perl:5.34-buster   <== would have incrond, but is EOL
+#      perl:5.40-bookworm <== has incron in main repo, modern Debian LTS
 
-FROM perl:5.34-buster
+FROM perl:5.40-bookworm
 
 MAINTAINER jalbersdorfer <jalbersdorfer@gmail.com>
 
 RUN apt-get update \
  && apt-get install -y poppler-utils ocrmypdf tesseract-ocr-deu incron
 
-RUN cpanm Dancer2
-RUN cpanm DBI
-RUN cpanm DBD::mysql
+COPY cpanfile .
+RUN cpanm --installdeps --notest .
 
 RUN sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
 
