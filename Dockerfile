@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libtemplate-perl \
     poppler-utils \
     ocrmypdf \
+    unpaper \
     tesseract-ocr-deu \
     incron \
     img2pdf \
