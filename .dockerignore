@@ -1,0 +1,14 @@
+data/
+.git
+.github
+.claude
+example/
+.gitignore
+.dockerignore
+README.md
+*.md
+.env
+.env.*
+node_modules
+npm-debug.log
+*.log

@@ -11,8 +11,7 @@ use POSIX qw(strftime);
 get '/' => sub {
     my $limit = $ENV{'OVERVIEW_LIMIT'} || "18";
     my $order = $ENV{'OVERVIEW_ORDER'} || "DESC";
-    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "",
-	{mysql_no_autocommit_cmd => 1});
+    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1}) or return error "Cannot connect to Sphinx: $DBI::errstr";
 
     my %query_parameters = params('query');
     if (query_parameters->get('search'))
@@ -52,7 +51,7 @@ get '/file/**' => sub {
 
 del '/file/:id' => sub {
     debug 'delete /file/' . route_parameters->get('id');
-    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1});
+    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1}) or return error "Cannot connect to Sphinx: $DBI::errstr";
     # $dbh->trace(5);
     # my $sth = $dbh->prepare('SELECT * FROM testrt WHERE id = ?;')
     #     or die "prepare statement failed: $dbh->errstr()";
@@ -85,8 +84,7 @@ del '/file/:id' => sub {
 # $ curl -F 'foo[]=@path/to/file' -F 'foo[]=@path/to/file2' foo.bar/upload 
 post '/upload' => sub {
     debug '/upload';
-    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "",
-	{mysql_no_autocommit_cmd => 1});
+    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1}) or return error "Cannot connect to Sphinx: $DBI::errstr";
     my $i = 1;
     my $all_uploads = request->uploads;
     my $home = $ENV{'ELDOAR_HOME'} || '/app';
@@ -127,6 +125,36 @@ post '/upload' => sub {
 get '/upload' => sub {
     template 'upload.tt'
 };
- 
+
+# Admin dashboard
+get '/admin' => sub {
+    my $dbh = DBI->connect(
+        "dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}",
+        "", "",
+        {mysql_no_autocommit_cmd => 1}
+    ) or die "Cannot connect to Sphinx: $DBI::errstr";
+
+    my $sth = $dbh->prepare("SELECT COUNT(*) as count FROM testrt");
+    $sth->execute();
+    my $row = $sth->fetchrow_hashref();
+
+    template 'admin.tt', {
+        doc_count => $row->{count} || 0
+    };
+};
+
+# Reindex trigger
+post '/admin/reindex' => sub {
+    my $home = $ENV{'ELDOAR_HOME'} || '/app';
+    debug 'Starting reindex...';
+
+    # Execute reindex script
+    my $output = `cd $home && perl reindex.pl 2>&1`;
+    debug "Reindex output: $output";
+
+    # Redirect back to admin page
+    redirect uri_for('/admin');
+};
+
 start;
 
