@@ -39,3 +39,10 @@ This is a larger feature requiring schema changes, backend routes, and frontend 
 Replace Bootstrap CSS with oak.ink in all frontend templates (index.tt, upload.tt,
 admin.tt). Update public/css and public/js references. Ensure all existing UI
 components are properly restyled.
+
+### #8 Add "load more" button for search results
+If there are more results than currently displayed (controlled by OVERVIEW_LIMIT),
+show a "load more" button at the bottom of the search result list. Clicking it
+should load the next page of results and append them to the list (or paginate).
+Requires backend support for offset/pagination in the Sphinx query and frontend
+handling in index.tt.
