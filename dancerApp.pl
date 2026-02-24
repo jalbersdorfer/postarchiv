@@ -71,9 +71,10 @@ del '/file/:id' => sub {
     my $dbpath = $rv->[0]->[2];
     "Would have deleted File id: $dbid, timestamp: $dbtim, path: $dbpath";
     # Move the Files to a "Recycle Bin"
-    move("$dbpath", "$dbpath.deleted");
-    move("$dbpath.jpg", "$dbpath.jpg.deleted");
-    move("$dbpath.txt", "$dbpath.txt.deleted");
+    my $home = $ENV{'ELDOAR_HOME'} || '/app';
+    move("$home/$dbpath", "$home/$dbpath.deleted");
+    move("$home/$dbpath.jpg", "$home/$dbpath.jpg.deleted");
+    move("$home/$dbpath.txt", "$home/$dbpath.txt.deleted");
 };
 
 # Upload a File via CURL
