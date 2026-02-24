@@ -46,6 +46,9 @@
     function MyDelete (id) {
 	console.log(`delete ${id}`);
 	var xhttp = new XMLHttpRequest();
+	xhttp.onloadend = function() {
+	    window.location.reload();
+	};
 	xhttp.open("DELETE", `/file/${id}`, true);
         xhttp.send();
         // xmlHttp.open('DELETE', 'perl.m', true);
