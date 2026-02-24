@@ -4,7 +4,9 @@ use DBI;
 use File::Path qw(make_path);
 use File::Copy;
 use POSIX qw(strftime);
- 
+
+my $version = "1.0.0";
+
 # my $dsn = "DBI:mysql:database=$database;host=localhost;port=9306";
 # my $dbh = DBI->connect($dsn, $user, $password);
  
@@ -22,7 +24,7 @@ get '/' => sub {
         or die "prepare statement failed: $dbh->errstr()";
     $sth->execute(query_parameters->get('search')) or die "execution failed: $dbh->errstr()";
     
-    template 'index.tt', { search => query_parameters->get('search'), cnt => $sth->rows, docs => $sth->fetchall_arrayref({}) };
+    template 'index.tt', { search => query_parameters->get('search'), cnt => $sth->rows, docs => $sth->fetchall_arrayref({}), version => $version };
     } else {
 	my $sth = $dbh->prepare(
 	    "SELECT * FROM testrt ORDER BY id $order LIMIT $limit;")
@@ -30,7 +32,7 @@ get '/' => sub {
     $sth->execute() or die "execution failed: $dbh->errstr()";
     
 # template 'index.tt', { };
-        template 'index.tt', { search => "Last $limit", cnt => $sth->rows, docs => $sth->fetchall_arrayref({}) };
+        template 'index.tt', { search => "Last $limit", cnt => $sth->rows, docs => $sth->fetchall_arrayref({}), version => $version };
     }
     # return $sth->rows . " Documents found.\n";
     # return 'Hello World!';
