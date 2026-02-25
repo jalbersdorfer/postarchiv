@@ -30,15 +30,6 @@ print "Found " . scalar(@pdf_files) . " PDF files\n";
 # Step 3: Process each PDF
 my $indexed = 0;
 foreach my $pdf_path (@pdf_files) {
-    # Extract date from filename
-    my ($year, $month, $day) = extract_date($pdf_path);
-
-    # Calculate base timestamp (milliseconds)
-    my $base_ts = date_to_ms_timestamp($year, $month, $day);
-
-    # Find free ID starting from base timestamp
-    my $id = find_free_id($dbh, $base_ts);
-
     # Read text content from .pdf.txt
     my $txt_path = $pdf_path . '.txt';
     my $content = '';
@@ -52,6 +43,20 @@ foreach my $pdf_path (@pdf_files) {
     } else {
         warn "Missing text file: $txt_path\n";
     }
+
+    # Determine date: prefer ELDOAR-DATE header in .txt, fall back to filename
+    my ($year, $month, $day);
+    if ($content =~ s/^ELDOAR-DATE:\s*(\d{4})-(\d{2})-(\d{2})\n//) {
+        ($year, $month, $day) = ($1, $2, $3);
+    } else {
+        ($year, $month, $day) = extract_date($pdf_path);
+    }
+
+    # Calculate base timestamp (milliseconds)
+    my $base_ts = date_to_ms_timestamp($year, $month, $day);
+
+    # Find free ID starting from base timestamp
+    my $id = find_free_id($dbh, $base_ts);
 
     # Extract relative path for title (match pattern in dancerApp.pl:115)
     my $title = $pdf_path;

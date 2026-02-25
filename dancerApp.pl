@@ -4,6 +4,8 @@ use DBI;
 use File::Path qw(make_path);
 use File::Copy;
 use POSIX qw(strftime);
+use Time::Local qw(timegm);
+use JSON::PP qw(encode_json);
 
 my $version = "1.0.0";
 
@@ -158,6 +160,63 @@ post '/admin/reindex' => sub {
     # Redirect back to admin page
     redirect uri_for('/admin');
 };
+
+put '/file/:id' => sub {
+    my $old_id   = int(route_parameters->get('id'));
+    my $new_date = body_parameters->get('date');
+    return status(400) unless $new_date && $new_date =~ /^(\d{4})-(\d{2})-(\d{2})$/;
+    my ($y, $m, $d) = ($1, $2, $3);
+
+    my $dbh = DBI->connect(
+        "dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}",
+        "", "", {mysql_no_autocommit_cmd => 1}
+    ) or return error "Cannot connect to Sphinx: $DBI::errstr";
+
+    my $row = $dbh->selectrow_hashref("SELECT * FROM testrt WHERE id = $old_id");
+    return status(404) unless $row;
+
+    # Write ELDOAR-DATE header to .txt file so reindex preserves this correction
+    my $home    = $ENV{'ELDOAR_HOME'} || '/app';
+    my $txtpath = "$home/$row->{title}.txt";
+    if (-f $txtpath) {
+        my $txt = '';
+        {
+            local $/;
+            open my $fh, '<', $txtpath or die "Cannot read $txtpath: $!";
+            $txt = <$fh>;
+            close $fh;
+        }
+        $txt =~ s/^ELDOAR-DATE:.*\n//;
+        $txt = "ELDOAR-DATE: $new_date\n$txt";
+        open my $fh, '>', $txtpath or die "Cannot write $txtpath: $!";
+        print $fh $txt;
+        close $fh;
+    }
+
+    # Find a free ID in the new date range
+    my $base = date_to_base_id($y, $m, $d);
+    my $existing = $dbh->selectall_arrayref(
+        "SELECT id FROM testrt WHERE id >= $base AND id < " . ($base + 86_400_000)
+    );
+    my %taken = map { $_->[0] => 1 } @$existing;
+    my $new_id = $base;
+    $new_id++ while $taken{$new_id};
+
+    my $content = $row->{content} // '';
+    $content =~ s/^ELDOAR-DATE:.*\n//;
+
+    $dbh->do("DELETE FROM testrt WHERE id = $old_id");
+    my $sth = $dbh->prepare('INSERT INTO testrt (id, gid, title, content) VALUES (?,?,?,?)');
+    $sth->execute($new_id, $new_id, $row->{title}, $content);
+
+    content_type 'application/json';
+    return encode_json({ new_id => "$new_id" });
+};
+
+sub date_to_base_id {
+    my ($year, $month, $day) = @_;
+    return timegm(0, 0, 0, $day, $month - 1, $year - 1900) * 1000;
+}
 
 start;
 
