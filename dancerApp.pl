@@ -116,21 +116,20 @@ del '/file/:id' => sub {
     # $sth->execute(@params) or die "execute failed: $dbh->errstr()";
     # debug $sth->fetchall_arrayref({});
     my $id = int(route_parameters->get('id'));
-    my $rv = $dbh->selectall_arrayref( "SELECT * FROM testrt WHERE id = $id" ) or die "execute failed: $dbh->errstr()";
-    # -v-v-v- THE CODE below WORKS! -v-v-v- : It is commented to prevent unintended delete until a 2nd Questions is impmented"
+    my $row = $dbh->selectrow_hashref("SELECT * FROM testrt WHERE id = $id");
+    return status(404) unless $row;
+    my $dbpath = $row->{title};
+    debug "deleting id=$id path=$dbpath";
     my $rows = $dbh->do("DELETE FROM testrt WHERE id = $id") or die "delete failed: $dbh->errstr()";
-    debug "DELETED $rows Rows(s)";
-    my @arv = @{$rv};
-    debug @arv;
-    my $dbid = $rv->[0]->[0];
-    my $dbtim = $rv->[0]->[1];
-    my $dbpath = $rv->[0]->[2];
-    "Would have deleted File id: $dbid, timestamp: $dbtim, path: $dbpath";
+    debug "DELETED $rows row(s)";
     # Move the Files to a "Recycle Bin"
     my $home = $ENV{'ELDOAR_HOME'} || '/app';
-    move("$home/$dbpath", "$home/$dbpath.deleted");
-    move("$home/$dbpath.jpg", "$home/$dbpath.jpg.deleted");
-    move("$home/$dbpath.txt", "$home/$dbpath.txt.deleted");
+    for my $src ("$home/$dbpath", "$home/$dbpath.jpg", "$home/$dbpath.txt") {
+        my $dst = "$src.deleted";
+        debug "rename $src -> $dst";
+        move($src, $dst) or warning "rename failed: $src -> $dst: $!"
+            if -f $src;
+    }
 };
 
 # Upload a File via CURL
