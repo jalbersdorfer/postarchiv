@@ -60,7 +60,7 @@ get '/' => sub {
         my @tlist = $doc->{tags} ? split(/\s+/, $doc->{tags}) : ();
         $doc->{tags_list} = \@tlist;
     }
-    template 'index.tt', { search => query_parameters->get('search'), cnt => $sth->rows, docs => $docs, version => $version };
+    template 'index.tt', { search => query_parameters->get('search'), q => query_parameters->get('search'), cnt => $sth->rows, docs => $docs, version => $version };
     } else {
 	my $sth = $dbh->prepare(
 	    "SELECT * FROM testrt ORDER BY id $order LIMIT $limit;")
@@ -72,7 +72,7 @@ get '/' => sub {
         $doc->{tags_list} = \@tlist;
     }
 # template 'index.tt', { };
-        template 'index.tt', { search => "Last $limit", cnt => $sth->rows, docs => $docs, version => $version };
+        template 'index.tt', { search => "Last $limit", q => '', cnt => $sth->rows, docs => $docs, version => $version };
     }
     # return $sth->rows . " Documents found.\n";
     # return 'Hello World!';

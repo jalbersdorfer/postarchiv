@@ -172,7 +172,7 @@ Electronic Document Archive v[% version %]
 </a>
       <form>
       <div class="form-group">
-        <input type="text" class="fullwidth" autofocus="autofocus" id="search" name="search" />
+        <input type="text" class="fullwidth" autofocus="autofocus" id="search" name="search" value="[% q %]" />
         </div>
         
         <input type="submit" class="btn btn-primary my-2" value="Suche" />
@@ -215,8 +215,8 @@ Electronic Document Archive v[% version %]
               <div class="mt-2" data-tag-container>
                 <div class="d-flex flex-wrap gap-1 align-items-center">
                   [% FOREACH tag IN doc.tags_list %]
-                  <span class="tag-badge">
-                    [% tag %]<button class="tag-remove" onclick="removeTag('[% doc.id %]', '[% tag %]', this)" title="Remove tag">&#215;</button>
+                  <span class="tag-badge" style="cursor:pointer">
+                    <span onclick="searchTag('[% tag %]')">[% tag %]</span><button class="tag-remove" onclick="removeTag('[% doc.id %]', '[% tag %]', this); event.stopPropagation();" title="Remove tag">&#215;</button>
                   </span>
                   [% END %]
                   <input type="text" class="tag-add-input" placeholder="+ tag" style="display:none" data-tag-input>
@@ -308,6 +308,12 @@ Electronic Document Archive v[% version %]
     });
   </script>
   <script type="text/javascript">
+    function searchTag(tag) {
+      var current = document.getElementById('search').value.trim();
+      var query = current ? current + ' @tags ' + tag : '@tags ' + tag;
+      window.location.href = '/?search=' + encodeURIComponent(query);
+    }
+
     function showTagInput(btn) {
       var container = btn.closest('[data-tag-container]');
       btn.style.display = 'none';
@@ -360,7 +366,9 @@ Electronic Document Archive v[% version %]
         active.forEach(function(t) {
           var span = document.createElement('span');
           span.className = 'tag-badge';
-          span.innerHTML = t.tag + '<button class="tag-remove" title="Remove tag" onclick="removeTag(\'' + id + '\',\'' + t.tag + '\',this)">&#215;</button>';
+          span.style.cursor = 'pointer';
+          span.innerHTML = '<span onclick="searchTag(\'' + t.tag + '\')" style="cursor:pointer">' + t.tag + '</span>'
+            + '<button class="tag-remove" title="Remove tag" onclick="removeTag(\'' + id + '\',\'' + t.tag + '\',this); event.stopPropagation();">&#215;</button>';
           badgeArea.insertBefore(span, inputEl);
         });
       };
