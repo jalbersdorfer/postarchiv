@@ -5,13 +5,43 @@ use File::Path qw(make_path);
 use File::Copy;
 use POSIX qw(strftime);
 use Time::Local qw(timegm);
-use JSON::PP qw(encode_json);
+use JSON::PP qw(encode_json decode_json);
 
 my $version = "1.0.0";
 
+sub path_for {
+    my ($title) = @_;
+    my $home = $ENV{ELDOAR_HOME} // '/app';
+    return "$home/$title";
+}
+
+sub read_tags_file {
+    my ($pdf_path) = @_;
+    my $tags_file = "$pdf_path.tags";
+    return [] unless -f $tags_file;
+    open(my $fh, '<', $tags_file) or return [];
+    my $json = do { local $/; <$fh> };
+    close $fh;
+    my $tags = eval { decode_json($json) } // [];
+    return $tags;
+}
+
+sub write_tags_file {
+    my ($pdf_path, $tags) = @_;
+    my $tags_file = "$pdf_path.tags";
+    open(my $fh, '>', $tags_file) or die "Cannot write $tags_file: $!";
+    print $fh encode_json($tags);
+    close $fh;
+}
+
+sub active_tags_str {
+    my ($tags) = @_;
+    return join(' ', map { $_->{tag} } grep { !$_->{removed} } @$tags);
+}
+
 # my $dsn = "DBI:mysql:database=$database;host=localhost;port=9306";
 # my $dbh = DBI->connect($dsn, $user, $password);
- 
+
 get '/' => sub {
     my $limit = $ENV{'OVERVIEW_LIMIT'} || "18";
     my $order = $ENV{'OVERVIEW_ORDER'} || "DESC";
@@ -25,19 +55,41 @@ get '/' => sub {
 	    "SELECT * FROM testrt WHERE MATCH(?) ORDER BY id $order LIMIT $limit;")
         or die "prepare statement failed: $dbh->errstr()";
     $sth->execute(query_parameters->get('search')) or die "execution failed: $dbh->errstr()";
-    
-    template 'index.tt', { search => query_parameters->get('search'), cnt => $sth->rows, docs => $sth->fetchall_arrayref({}), version => $version };
+    my $docs = $sth->fetchall_arrayref({});
+    for my $doc (@$docs) {
+        my @tlist = $doc->{tags} ? split(/\s+/, $doc->{tags}) : ();
+        $doc->{tags_list} = \@tlist;
+    }
+    template 'index.tt', { search => query_parameters->get('search'), cnt => $sth->rows, docs => $docs, version => $version };
     } else {
 	my $sth = $dbh->prepare(
 	    "SELECT * FROM testrt ORDER BY id $order LIMIT $limit;")
         or die "prepare statement failed: $dbh->errstr()";
     $sth->execute() or die "execution failed: $dbh->errstr()";
-    
+    my $docs = $sth->fetchall_arrayref({});
+    for my $doc (@$docs) {
+        my @tlist = $doc->{tags} ? split(/\s+/, $doc->{tags}) : ();
+        $doc->{tags_list} = \@tlist;
+    }
 # template 'index.tt', { };
-        template 'index.tt', { search => "Last $limit", cnt => $sth->rows, docs => $sth->fetchall_arrayref({}), version => $version };
+        template 'index.tt', { search => "Last $limit", cnt => $sth->rows, docs => $docs, version => $version };
     }
     # return $sth->rows . " Documents found.\n";
     # return 'Hello World!';
+};
+
+get '/file/:id/tags' => sub {
+    my $id  = route_parameters->get('id');
+
+    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1}) or return error "Cannot connect to Sphinx: $DBI::errstr";
+    my $row = $dbh->selectrow_hashref("SELECT * FROM testrt WHERE id = $id");
+    return status(404) unless $row;
+
+    my $pdf_path = path_for($row->{title});
+    my $tags = read_tags_file($pdf_path);
+
+    content_type 'application/json';
+    return encode_json($tags);
 };
 
 get '/file/**' => sub {
@@ -111,11 +163,11 @@ post '/upload' => sub {
 	    $content = `$cmd`;
 	}
         my $sth = $dbh->prepare(
-	    'INSERT INTO testrt (id, gid, title, content) VALUES (?,?,?,?)'
+	    'INSERT INTO testrt (id, gid, title, content, tags) VALUES (?,?,?,?,?)'
         ) or die "prepare statement failed: $dbh->errstr()";
         my $pk = time() * 1000 + $i++;
         $sth->execute(
-            $pk, $pk, $path . $_->filename, $content
+            $pk, $pk, $path . $_->filename, $content, ''
         ) or die "execution failed: $dbh->errstr()";
         my $firstpagefp = $filepath . '[0]';
         my $jpgfilepath = $filepath . '.jpg';
@@ -159,6 +211,62 @@ post '/admin/reindex' => sub {
 
     # Redirect back to admin page
     redirect uri_for('/admin');
+};
+
+post '/file/:id/tag' => sub {
+    my $id  = route_parameters->get('id');
+    my $tag = body_parameters->get('tag');
+    $tag =~ s/^\s+|\s+$//g;
+    return status(400) unless $tag =~ /^\S+$/;
+
+    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1}) or return error "Cannot connect to Sphinx: $DBI::errstr";
+    my $row = $dbh->selectrow_hashref("SELECT * FROM testrt WHERE id = $id");
+    return status(404) unless $row;
+
+    my $pdf_path = path_for($row->{title});
+    my $tags = read_tags_file($pdf_path);
+
+    my $already = grep { $_->{tag} eq $tag && !$_->{removed} } @$tags;
+    unless ($already) {
+        push @$tags, { tag => $tag, added => time(), removed => undef };
+        write_tags_file($pdf_path, $tags);
+    }
+
+    my $tags_str = active_tags_str($tags);
+    $dbh->do("DELETE FROM testrt WHERE id = $id");
+    my $sth = $dbh->prepare('INSERT INTO testrt (id, gid, title, content, tags) VALUES (?,?,?,?,?)');
+    $sth->execute($id, $id, $row->{title}, $row->{content}, $tags_str);
+
+    content_type 'application/json';
+    return encode_json({ ok => 1, tags => $tags_str });
+};
+
+del '/file/:id/tag' => sub {
+    my $id  = route_parameters->get('id');
+    my $tag = body_parameters->get('tag');
+
+    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1}) or return error "Cannot connect to Sphinx: $DBI::errstr";
+    my $row = $dbh->selectrow_hashref("SELECT * FROM testrt WHERE id = $id");
+    return status(404) unless $row;
+
+    my $pdf_path = path_for($row->{title});
+    my $tags = read_tags_file($pdf_path);
+
+    my $now = time();
+    for my $t (@$tags) {
+        if ($t->{tag} eq $tag && !$t->{removed}) {
+            $t->{removed} = $now;
+        }
+    }
+    write_tags_file($pdf_path, $tags);
+
+    my $tags_str = active_tags_str($tags);
+    $dbh->do("DELETE FROM testrt WHERE id = $id");
+    my $sth = $dbh->prepare('INSERT INTO testrt (id, gid, title, content, tags) VALUES (?,?,?,?,?)');
+    $sth->execute($id, $id, $row->{title}, $row->{content}, $tags_str);
+
+    content_type 'application/json';
+    return encode_json({ ok => 1 });
 };
 
 put '/file/:id' => sub {
@@ -205,9 +313,10 @@ put '/file/:id' => sub {
     my $content = $row->{content} // '';
     $content =~ s/^ELDOAR-DATE:.*\n//;
 
+    my $existing_tags = $row->{tags} // '';
     $dbh->do("DELETE FROM testrt WHERE id = $old_id");
-    my $sth = $dbh->prepare('INSERT INTO testrt (id, gid, title, content) VALUES (?,?,?,?)');
-    $sth->execute($new_id, $new_id, $row->{title}, $content);
+    my $sth = $dbh->prepare('INSERT INTO testrt (id, gid, title, content, tags) VALUES (?,?,?,?,?)');
+    $sth->execute($new_id, $new_id, $row->{title}, $content, $existing_tags);
 
     content_type 'application/json';
     return encode_json({ new_id => "$new_id" });

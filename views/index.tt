@@ -41,6 +41,25 @@
         overflow: hidden;
 	height: 300px;
       }
+      /* Tags */
+      .tag-badge {
+        display: inline-flex; align-items: center; gap: 3px;
+        background: #e9ecef; border-radius: 4px;
+        padding: 1px 6px; font-size: 0.75rem; cursor: default;
+      }
+      .tag-badge .tag-remove {
+        cursor: pointer; opacity: 0.5; font-size: 0.85em;
+        border: none; background: none; padding: 0; line-height: 1;
+      }
+      .tag-badge .tag-remove:hover { opacity: 1; }
+      .tag-add-input {
+        font-size: 0.75rem; border: 1px solid #ced4da;
+        border-radius: 4px; padding: 1px 6px; width: 80px;
+      }
+      .tag-history { font-size: 0.7rem; color: #6c757d; }
+      .tag-history-toggle { font-size: 0.7rem; cursor: pointer; color: #6c757d;
+        text-decoration: underline; background: none; border: none; padding: 0; }
+
       /* Delete button confirmation state */
       .btn-delete-confirm {
         transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
@@ -193,6 +212,21 @@ Electronic Document Archive v[% version %]
                   <span class="doc-date" data-id="[% doc.id %]" style="cursor:pointer" title="Click to edit date"></span>
                 </small>
               </div>
+              <div class="mt-2" data-tag-container>
+                <div class="d-flex flex-wrap gap-1 align-items-center">
+                  [% FOREACH tag IN doc.tags_list %]
+                  <span class="tag-badge">
+                    [% tag %]<button class="tag-remove" onclick="removeTag('[% doc.id %]', '[% tag %]', this)" title="Remove tag">&#215;</button>
+                  </span>
+                  [% END %]
+                  <input type="text" class="tag-add-input" placeholder="+ tag" style="display:none" data-tag-input>
+                  <button class="tag-badge" style="cursor:pointer" onclick="showTagInput(this)" data-tag-add-btn>+</button>
+                </div>
+                <div>
+                  <button class="tag-history-toggle mt-1" onclick="toggleHistory('[% doc.id %]', this)">&#9658; history</button>
+                  <div class="tag-history mt-1" style="display:none" data-history-panel></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -272,6 +306,94 @@ Electronic Document Archive v[% version %]
         });
       });
     });
+  </script>
+  <script type="text/javascript">
+    function showTagInput(btn) {
+      var container = btn.closest('[data-tag-container]');
+      btn.style.display = 'none';
+      var input = container.querySelector('[data-tag-input]');
+      input.style.display = '';
+      input.focus();
+      input.onblur = function() {
+        var tag = input.value.trim();
+        input.value = '';
+        input.style.display = 'none';
+        btn.style.display = '';
+        if (tag) addTag(btn.closest('[data-doc-id]').dataset.docId, tag, container);
+      };
+      input.onkeydown = function(e) {
+        if (e.key === 'Enter') input.blur();
+        if (e.key === 'Escape') { input.value = ''; input.blur(); }
+      };
+    }
+
+    function addTag(id, tag, container) {
+      var xhr = new XMLHttpRequest();
+      xhr.onloadend = function() {
+        if (xhr.status === 200) refreshTagBadges(id, container);
+      };
+      xhr.open('POST', '/file/' + id + '/tag', true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.send('tag=' + encodeURIComponent(tag));
+    }
+
+    function removeTag(id, tag, btn) {
+      var container = btn.closest('[data-tag-container]');
+      var xhr = new XMLHttpRequest();
+      xhr.onloadend = function() {
+        if (xhr.status === 200) refreshTagBadges(id, container);
+      };
+      xhr.open('DELETE', '/file/' + id + '/tag', true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.send('tag=' + encodeURIComponent(tag));
+    }
+
+    function refreshTagBadges(id, container) {
+      var xhr = new XMLHttpRequest();
+      xhr.onloadend = function() {
+        if (xhr.status !== 200) return;
+        var tags = JSON.parse(xhr.responseText);
+        var active = tags.filter(function(t) { return !t.removed; });
+        var badgeArea = container.querySelector('.d-flex.flex-wrap');
+        badgeArea.querySelectorAll('.tag-badge:not([data-tag-add-btn])').forEach(function(b) { b.remove(); });
+        var inputEl = badgeArea.querySelector('[data-tag-input]');
+        active.forEach(function(t) {
+          var span = document.createElement('span');
+          span.className = 'tag-badge';
+          span.innerHTML = t.tag + '<button class="tag-remove" title="Remove tag" onclick="removeTag(\'' + id + '\',\'' + t.tag + '\',this)">&#215;</button>';
+          badgeArea.insertBefore(span, inputEl);
+        });
+      };
+      xhr.open('GET', '/file/' + id + '/tags', true);
+      xhr.send();
+    }
+
+    function toggleHistory(id, btn) {
+      btn.blur();
+      var panel = btn.nextElementSibling;
+      if (panel.style.display !== 'none') {
+        panel.style.display = 'none';
+        btn.textContent = '\u25B6 history';
+        return;
+      }
+      var xhr = new XMLHttpRequest();
+      xhr.onloadend = function() {
+        if (xhr.status !== 200) return;
+        var tags = JSON.parse(xhr.responseText);
+        var html = tags.map(function(t) {
+          var added   = new Date(t.added * 1000).toISOString().slice(0, 10);
+          var removed = t.removed ? new Date(t.removed * 1000).toISOString().slice(0, 10) : null;
+          return removed
+            ? '<span style="text-decoration:line-through">' + t.tag + '</span> added ' + added + ', removed ' + removed
+            : '<b>' + t.tag + '</b> added ' + added;
+        }).join('<br>');
+        panel.innerHTML = html || 'No tag history.';
+        panel.style.display = '';
+        btn.textContent = '\u25BC history';
+      };
+      xhr.open('GET', '/file/' + id + '/tags', true);
+      xhr.send();
+    }
   </script>
 </body>
 </html>

@@ -4,6 +4,7 @@ use warnings;
 use DBI;
 use File::Find;
 use Time::Local;
+use JSON::PP qw(decode_json encode_json);
 
 # Database connection (same pattern as dancerApp.pl:14)
 my $sphinx_host = $ENV{'SPHINX_HOST'} || '127.0.0.1';
@@ -64,11 +65,15 @@ foreach my $pdf_path (@pdf_files) {
         $title = $1;
     }
 
+    # Read tags sidecar
+    my $tags_ref = read_tags_file($pdf_path);
+    my $tags_str = active_tags_str($tags_ref);
+
     # Insert into Sphinx
     my $sth = $dbh->prepare(
-        'INSERT INTO testrt (id, gid, title, content) VALUES (?,?,?,?)'
+        'INSERT INTO testrt (id, gid, title, content, tags) VALUES (?,?,?,?,?)'
     );
-    $sth->execute($id, $id, $title, $content);
+    $sth->execute($id, $id, $title, $content, $tags_str);
 
     $indexed++;
     if ($indexed % 50 == 0) {
@@ -117,4 +122,20 @@ sub find_free_id {
 
     # If we exhaust the day range, continue anyway
     return $id;
+}
+
+sub read_tags_file {
+    my ($pdf_path) = @_;
+    my $tags_file = "$pdf_path.tags";
+    return [] unless -f $tags_file;
+    open(my $fh, '<', $tags_file) or return [];
+    my $json = do { local $/; <$fh> };
+    close $fh;
+    my $tags = eval { decode_json($json) } // [];
+    return $tags;
+}
+
+sub active_tags_str {
+    my ($tags) = @_;
+    return join(' ', map { $_->{tag} } grep { !$_->{removed} } @$tags);
 }
