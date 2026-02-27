@@ -223,7 +223,7 @@ Electronic Document Archive v[% version %]
                   <button class="tag-badge" style="cursor:pointer" onclick="showTagInput(this)" data-tag-add-btn>+</button>
                 </div>
                 <div>
-                  <button class="tag-history-toggle mt-1" onclick="toggleHistory('[% doc.id %]', this)">&#9658; history</button>
+                  <button class="tag-history-toggle mt-1" onclick="toggleHistory('[% doc.id %]', this)">&#9654;&#65038; history</button>
                   <div class="tag-history mt-1" style="display:none" data-history-panel></div>
                 </div>
               </div>
@@ -381,7 +381,7 @@ Electronic Document Archive v[% version %]
       var panel = btn.nextElementSibling;
       if (panel.style.display !== 'none') {
         panel.style.display = 'none';
-        btn.textContent = '\u25B6 history';
+        btn.textContent = '\u25B6\uFE0E history';
         return;
       }
       var xhr = new XMLHttpRequest();
@@ -397,7 +397,7 @@ Electronic Document Archive v[% version %]
         }).join('<br>');
         panel.innerHTML = html || 'No tag history.';
         panel.style.display = '';
-        btn.textContent = '\u25BC history';
+        btn.textContent = '\u25BC\uFE0E history';
       };
       xhr.open('GET', '/file/' + id + '/tags', true);
       xhr.send();
