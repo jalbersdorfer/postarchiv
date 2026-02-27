@@ -70,6 +70,7 @@ services:
       SPHINX_HOST: eldoar-manticore
       OVERVIEW_LIMIT: 9
       OVERVIEW_ORDER: DESC
+      ELDOAR_STAMPS: "Bezahlt,Erledigt"
     links:
       - sphinx
     networks:

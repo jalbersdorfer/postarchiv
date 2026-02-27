@@ -60,6 +60,13 @@
       .tag-history-toggle { font-size: 0.7rem; cursor: pointer; color: #6c757d;
         text-decoration: underline; background: none; border: none; padding: 0; }
 
+      .tag-stamp {
+        background: none; border: 1px solid #6c757d; border-radius: 4px;
+        padding: 1px 8px; font-size: 0.75rem; cursor: pointer; color: #6c757d;
+      }
+      .tag-stamp:hover { background: #e9ecef; }
+      .tag-stamp.active { display: none; }
+
       /* Delete button confirmation state */
       .btn-delete-confirm {
         transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
@@ -219,6 +226,10 @@ Electronic Document Archive v[% version %]
                     <span onclick="searchTag('[% tag %]')">[% tag %]</span><button class="tag-remove" onclick="removeTag('[% doc.id %]', '[% tag %]', this); event.stopPropagation();" title="Remove tag">&#215;</button>
                   </span>
                   [% END %]
+                  [% FOREACH stamp IN stamps %]
+                  <button class="tag-stamp" data-stamp-tag="[% stamp %]"
+                          onclick="applyStamp('[% doc.id %]', '[% stamp %]', this)">[% stamp %]</button>
+                  [% END %]
                   <input type="text" class="tag-add-input" placeholder="+ tag" style="display:none" data-tag-input>
                   <button class="tag-badge" style="cursor:pointer" onclick="showTagInput(this)" data-tag-add-btn>+</button>
                 </div>
@@ -360,20 +371,46 @@ Electronic Document Archive v[% version %]
         if (xhr.status !== 200) return;
         var tags = JSON.parse(xhr.responseText);
         var active = tags.filter(function(t) { return !t.removed; });
+        active.sort(function(a, b) { return a.tag.localeCompare(b.tag); });
         var badgeArea = container.querySelector('.d-flex.flex-wrap');
         badgeArea.querySelectorAll('.tag-badge:not([data-tag-add-btn])').forEach(function(b) { b.remove(); });
         var inputEl = badgeArea.querySelector('[data-tag-input]');
+        var firstStamp = badgeArea.querySelector('.tag-stamp');
+        var anchor = firstStamp || inputEl;
         active.forEach(function(t) {
           var span = document.createElement('span');
           span.className = 'tag-badge';
           span.style.cursor = 'pointer';
           span.innerHTML = '<span onclick="searchTag(\'' + t.tag + '\')" style="cursor:pointer">' + t.tag + '</span>'
             + '<button class="tag-remove" title="Remove tag" onclick="removeTag(\'' + id + '\',\'' + t.tag + '\',this); event.stopPropagation();">&#215;</button>';
-          badgeArea.insertBefore(span, inputEl);
+          badgeArea.insertBefore(span, anchor);
+        });
+        var activeSet = {};
+        active.forEach(function(t) { activeSet[t.tag] = true; });
+        container.querySelectorAll('.tag-stamp').forEach(function(b) {
+          b.classList.toggle('active', !!activeSet[b.dataset.stampTag]);
         });
       };
       xhr.open('GET', '/file/' + id + '/tags', true);
       xhr.send();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('[data-tag-container]').forEach(function(container) {
+        var activeTags = {};
+        container.querySelectorAll('.tag-badge:not([data-tag-add-btn]) span').forEach(function(s) {
+          activeTags[s.textContent.trim()] = true;
+        });
+        container.querySelectorAll('.tag-stamp').forEach(function(b) {
+          b.classList.toggle('active', !!activeTags[b.dataset.stampTag]);
+        });
+      });
+    });
+
+    function applyStamp(id, tag, btn) {
+      if (btn.classList.contains('active')) return;
+      var container = btn.closest('[data-tag-container]');
+      addTag(id, tag, container);
     }
 
     function toggleHistory(id, btn) {

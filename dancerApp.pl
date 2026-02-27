@@ -47,6 +47,9 @@ get '/' => sub {
     my $order = $ENV{'OVERVIEW_ORDER'} || "DESC";
     my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1, mysql_enable_utf8 => 1}) or return error "Cannot connect to Sphinx: $DBI::errstr";
 
+    my @stamps = map { s/^\s+|\s+$//gr } split(/,/, $ENV{'ELDOAR_STAMPS'} // '');
+    @stamps = grep { length($_) } @stamps;
+
     my %query_parameters = params('query');
     if (query_parameters->get('search'))
     {
@@ -57,10 +60,10 @@ get '/' => sub {
     $sth->execute(query_parameters->get('search')) or die "execution failed: $dbh->errstr()";
     my $docs = $sth->fetchall_arrayref({});
     for my $doc (@$docs) {
-        my @tlist = $doc->{tags} ? split(/\s+/, $doc->{tags}) : ();
+        my @tlist = $doc->{tags} ? sort split(/\s+/, $doc->{tags}) : ();
         $doc->{tags_list} = \@tlist;
     }
-    template 'index.tt', { search => query_parameters->get('search'), q => query_parameters->get('search'), cnt => $sth->rows, docs => $docs, version => $version };
+    template 'index.tt', { search => query_parameters->get('search'), q => query_parameters->get('search'), cnt => $sth->rows, docs => $docs, version => $version, stamps => \@stamps };
     } else {
 	my $sth = $dbh->prepare(
 	    "SELECT * FROM testrt ORDER BY id $order LIMIT $limit;")
@@ -68,11 +71,11 @@ get '/' => sub {
     $sth->execute() or die "execution failed: $dbh->errstr()";
     my $docs = $sth->fetchall_arrayref({});
     for my $doc (@$docs) {
-        my @tlist = $doc->{tags} ? split(/\s+/, $doc->{tags}) : ();
+        my @tlist = $doc->{tags} ? sort split(/\s+/, $doc->{tags}) : ();
         $doc->{tags_list} = \@tlist;
     }
 # template 'index.tt', { };
-        template 'index.tt', { search => "Last $limit", q => '', cnt => $sth->rows, docs => $docs, version => $version };
+        template 'index.tt', { search => "Last $limit", q => '', cnt => $sth->rows, docs => $docs, version => $version, stamps => \@stamps };
     }
     # return $sth->rows . " Documents found.\n";
     # return 'Hello World!';
