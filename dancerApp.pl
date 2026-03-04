@@ -15,7 +15,7 @@ my $version = "1.0.0";
 get '/' => sub {
     my $limit = $ENV{'OVERVIEW_LIMIT'} || "18";
     my $order = $ENV{'OVERVIEW_ORDER'} || "DESC";
-    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1}) or return error "Cannot connect to Sphinx: $DBI::errstr";
+    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1, mysql_enable_utf8 => 1}) or return error "Cannot connect to Sphinx: $DBI::errstr";
 
     my %query_parameters = params('query');
     if (query_parameters->get('search'))
@@ -47,15 +47,15 @@ get '/file/**' => sub {
     my $filename = "" . join("/", @foo);
     debug $filename;
     
-    # return send_file( $filename, system_path => 1, streaming => 0 );
-    return send_file( $filename );
+    my $home = $ENV{'ELDOAR_HOME'} || '/app';
+    return send_file( "$home/$filename", system_path => 1 );
 
     # return 'You want to download :"' . $sfoo . '"';
 };
 
 del '/file/:id' => sub {
     debug 'delete /file/' . route_parameters->get('id');
-    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1}) or return error "Cannot connect to Sphinx: $DBI::errstr";
+    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1, mysql_enable_utf8 => 1}) or return error "Cannot connect to Sphinx: $DBI::errstr";
     # $dbh->trace(5);
     # my $sth = $dbh->prepare('SELECT * FROM testrt WHERE id = ?;')
     #     or die "prepare statement failed: $dbh->errstr()";
@@ -89,7 +89,7 @@ del '/file/:id' => sub {
 # $ curl -F 'foo[]=@path/to/file' -F 'foo[]=@path/to/file2' foo.bar/upload 
 post '/upload' => sub {
     debug '/upload';
-    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1}) or return error "Cannot connect to Sphinx: $DBI::errstr";
+    my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1, mysql_enable_utf8 => 1}) or return error "Cannot connect to Sphinx: $DBI::errstr";
     my $i = 1;
     my $all_uploads = request->uploads;
     my $home = $ENV{'ELDOAR_HOME'} || '/app';
@@ -107,7 +107,7 @@ post '/upload' => sub {
 	my $contentlen = length $content;
 	if ($contentlen < 10)
 	{
-            `ocrmypdf -l deu -dc $filepath $filepath`;
+            `ocrmypdf -l deu -dc '$filepath' '$filepath'`;
 	    $content = `$cmd`;
 	}
         my $sth = $dbh->prepare(
@@ -136,7 +136,7 @@ get '/admin' => sub {
     my $dbh = DBI->connect(
         "dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}",
         "", "",
-        {mysql_no_autocommit_cmd => 1}
+        {mysql_no_autocommit_cmd => 1, mysql_enable_utf8 => 1}
     ) or die "Cannot connect to Sphinx: $DBI::errstr";
 
     my $sth = $dbh->prepare("SELECT COUNT(*) as count FROM testrt");
@@ -169,7 +169,7 @@ put '/file/:id' => sub {
 
     my $dbh = DBI->connect(
         "dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}",
-        "", "", {mysql_no_autocommit_cmd => 1}
+        "", "", {mysql_no_autocommit_cmd => 1, mysql_enable_utf8 => 1}
     ) or return error "Cannot connect to Sphinx: $DBI::errstr";
 
     my $row = $dbh->selectrow_hashref("SELECT * FROM testrt WHERE id = $old_id");
