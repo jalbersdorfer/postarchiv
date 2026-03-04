@@ -101,7 +101,7 @@ post '/upload' => sub {
         $_->copy_to($filepath);
 
         my $txtfilepath = $filepath . '.txt';
-        my $cmd = "pdf2txt '$filepath' | sed 's/\\x27/ /g' | tee '$txtfilepath'";
+        my $cmd = "pdftotext '$filepath' - | sed 's/\\x27/ /g' | tee '$txtfilepath'";
         debug $cmd;
         my $content = `$cmd`;
 	my $contentlen = length $content;
