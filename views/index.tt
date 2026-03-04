@@ -9,7 +9,7 @@
     <meta name="description" content="For Search you know">
     <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"> -->
     <!-- Bootstrap core CSS -->
-    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
     <style>
       .bd-placeholder-img {
         font-size: 1.125rem;
@@ -221,7 +221,7 @@ Electronic Document Archive v[% version %]
 </footer>
 
 
-    <script src="./js/bootstrap.bundle.min.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
   <script type="text/javascript">
     function idToDate(id) {
       return new Date(parseInt(id)).toISOString().slice(0, 10);

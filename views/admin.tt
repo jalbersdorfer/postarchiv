@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <title>ELDOAR Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
     <style type="text/css">
         .fullwidth { width:90%; max-width: 540px; }
         .center { margin:auto; }
@@ -73,6 +73,6 @@ Electronic Document Archive - Admin
     </div>
 </footer>
 
-<script src="./js/bootstrap.bundle.min.js"></script>
+<script src="/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

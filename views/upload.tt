@@ -2,8 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8"/>
-    <title>ELDOAR Search</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>ELDOAR Upload</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
     <style type="text/css">
       .fullwidth {
         width:90%;
@@ -47,6 +48,7 @@ Electronic Document Archive
     </div>
   </div>
 </div>
+  <script src="/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 
