@@ -92,10 +92,11 @@ post '/upload' => sub {
     my $dbh = DBI->connect("dbi:mysql:database=;host=$ENV{'SPHINX_HOST'};port=$ENV{'SPHINX_PORT'}", "", "", {mysql_no_autocommit_cmd => 1, mysql_enable_utf8 => 1}) or return error "Cannot connect to Sphinx: $DBI::errstr";
     my $i = 1;
     my $all_uploads = request->uploads;
+    my @uploads = map { ref $_ eq 'ARRAY' ? @$_ : $_ } values %{$all_uploads};
     my $home = $ENV{'ELDOAR_HOME'} || '/app';
     my $path = strftime "data/files/%Y/%m/", localtime;
     make_path("$home/" . $path, {verbose => 1});
-    foreach (values %{$all_uploads}) {
+    foreach (@uploads) {
         my $filepath = "$home/" . $path . $_->filename;
         debug 'Save upload to ' . $filepath;
         $_->copy_to($filepath);
