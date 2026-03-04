@@ -1,14 +1,79 @@
 # postarchiv
+
 Searchable Archive for scanned Paper Mail
 
 ## Configuration of the Docker Image
 
-You can provide the following Environment Variables to configure the App.  
+You can provide the following Environment Variables to configure the App.
 
 - `SPHINX_HOST`: Hostname of the Sphinx Server
 - `OVERVIEW_LIMIT`: How much *last* items will be shown at StartPage. Default = 18
 - `OVERVIEW_ORDER`: SortOrder of the StartPage. Either ASC or DESC. Default = DESC
 - `ELDOAR_REMOVE_DELTED_AFTER_DAYS`: Days after when deleted Files will be really removed. Unconfigured means never.
+
+## Proxmox LXC Installation
+
+One script – [`lxc/eldoar.sh`](lxc/eldoar.sh) – handles everything in the [Proxmox Helper Scripts](https://community-scripts.github.io/ProxmoxVE/) style.
+It detects automatically where it runs and acts accordingly:
+
+| Environment          | Detected by            | Action                                     |
+|----------------------|------------------------|--------------------------------------------|
+| Proxmox host         | `/etc/pve` exists      | Create CT, copy script inside, run install |
+| Container – fresh    | no `/app/.git`         | Full installation                          |
+| Container – existing | `/app/.git` present    | `git pull` + update modules + restart      |
+
+### First-time installation – run on the Proxmox host
+
+```bash
+bash -c "$(wget -qLO - https://raw.githubusercontent.com/jalbersdorfer/postarchiv/master/lxc/eldoar.sh)"
+```
+
+The script will:
+
+1. Ask for container settings (CT-ID, hostname, cores, RAM, disk) – or use defaults
+2. Download the Debian 12 template if not already present
+3. Create and start the LXC container
+4. Copy itself into the container as `/opt/eldoar.sh` and run the installation
+
+Default container settings:
+
+| Setting  | Default            |
+|----------|--------------------|
+| OS       | Debian 12 Bookworm |
+| Cores    | 2                  |
+| RAM      | 2048 MB            |
+| Disk     | 8 GB               |
+| Network  | DHCP via vmbr0     |
+
+### Updating – run inside the container
+
+```bash
+bash /opt/eldoar.sh
+# or from the Proxmox host:
+pct exec <CTID> -- bash /opt/eldoar.sh
+```
+
+### Persistent data (Bind Mount)
+
+To store documents outside the container rootfs, add a bind mount in Proxmox:
+
+```text
+CT → Resources → Add → Bind Mount
+  Host path : /mnt/your-storage/eldoar
+  CT path   : /app/data/files
+```
+
+### Access
+
+| Service       | URL                                 |
+|---------------|-------------------------------------|
+| Web interface | `http://<container-ip>:3000`        |
+| Admin panel   | `http://<container-ip>:3000/admin`  |
+| Upload        | `http://<container-ip>:3000/upload` |
+
+Environment variables are configured in `/etc/eldoar.env` inside the container.
+
+---
 
 ## Featuers / Ideas
 
@@ -38,7 +103,8 @@ Additional Information
 
 - Option to edit Title and Tags of the PDF Files (PDF File Metadata - using exiftool)
 
-# Components
+## Components
+
 Which Components are used
 
 - Raspberry Pi 4
@@ -49,6 +115,7 @@ Which Components are used
 - [exiftool](https://exiftool.org/) `sudo apt install libimage-exiftool-perl`
 
 ## Sphinx
+
 Building/Compiling and installation
 
 ```bash
@@ -61,7 +128,8 @@ sudo make install
 ```
 
 sphinx.conf - `/usr/local/etc/sphinx.conf`
-```
+
+```conf
 #
 # Minimal Sphinx configuration sample (clean, simple, functional)
 #
@@ -80,13 +148,10 @@ index testrt
         expand_keywords         = 1
 }
 
-
-
 indexer
 {
         mem_limit               = 128M
 }
-
 
 searchd
 {
@@ -106,18 +171,21 @@ searchd
 ```
 
 Start searchd
+
 ```bash
 sudo searchd
 ```
 
 Stop searchd
+
 ```bash
 sudo searchd --stop
 ```
 
 Search - via mysql
+
 ```bash
-$sudo mysql -h 127.0.0.1 -P 9306
+sudo mysql -h 127.0.0.1 -P 9306
 > SELECT * FROM testrt WHERE MATCH ('stadtwerke');
 +------------+------------+-----------------------------------------------------------------------------------+
 | id         | gid        | title                                                                             |
@@ -135,13 +203,13 @@ $sudo mysql -h 127.0.0.1 -P 9306
 Install DBI
 
 ```bash
-$ sudo apt-get install libdbd-mysql-perl
+sudo apt-get install libdbd-mysql-perl
 ```
 
 Install Dancer2
 
 ```bash
-$ cpan Dancer2
+cpan Dancer2
 ```
 
 ## Exiftool
@@ -156,21 +224,22 @@ Title      : This is a really greate Title
 Keywords   : This, Are, Some, Really, Greate, Tags
 ```
 
-# HowTo get your Scanner working
+## HowTo get your Scanner working
 
-I use a Fujitsu fi-6140 Scanner connected to a RaspberryPi Zero (2 W) which runs Arch Linux ARM.  
+I use a Fujitsu fi-6140 Scanner connected to a RaspberryPi Zero (2 W) which runs Arch Linux ARM.
 
-This Scanner has a couple of Buttons on its body, which can be used with `scanbd` (Scanner Button Deamon).  
+This Scanner has a couple of Buttons on its body, which can be used with `scanbd` (Scanner Button Deamon).
 
 I installed the `scanbd` from the `AUR` Respository using `trizen`.
 
-The scanner did not work in the first place on the `Raspberry Pi Zero 2 W` but had not a single issue on the `Raspberry Pi Zero`.  
+The scanner did not work in the first place on the `Raspberry Pi Zero 2 W` but had not a single issue on the `Raspberry Pi Zero`.
 This might be because the `Raspberry Pi Zero` runs `ArchLinux ARM 32`, while the `Raspberry Pi Zero 2-W` is powered by `ArchLinux ARM for armv7h`.
 
-The issue on the `RaspberryPi Zero 2-W` was, that the USB Device was installed just for `root`.  
+The issue on the `RaspberryPi Zero 2-W` was, that the USB Device was installed just for `root`.
+
 ```shell
 # lsusb
-Bus 001 Device 004: ID 04c5:11f1 Fujitsu, Ltd 
+Bus 001 Device 004: ID 04c5:11f1 Fujitsu, Ltd
 Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
 
 # ls -lha /dev/bus/usb/001/
@@ -181,9 +250,10 @@ crw-rw-r--  1 root root    189, 0 Nov 29 13:51 001
 crw-rw-r--+ 1 root root    189, 3 Dec  2 19:54 004
 ```
 
-To fix this, I created a `/etc/udev/rules.d/40-scanner.rules` file with the following content:  
+To fix this, I created a `/etc/udev/rules.d/40-scanner.rules` file with the following content:
 (the `idVendor` and `idProduct` Numbers are taken from the output of the `lsusb` command.)
-```
+
+```text
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="04c5", ATTRS{idProduct}=="11f1", ENV{libsane_matched}="yes", GROUP="scanner"
 ```
 
@@ -198,10 +268,9 @@ crw-rw-r--  1 root root    189, 0 Nov 29 13:51 001
 crw-rw----+ 1 root scanner 189, 4 Dec  2 19:54 005
 ```
 
-Even without restarting the `scanbd` Service, the buttons worked immediatelly.  
+Even without restarting the `scanbd` Service, the buttons worked immediatelly.
 
-
-# Further reading
+## Further reading
 
 other Sites I found useful Information on.
 
