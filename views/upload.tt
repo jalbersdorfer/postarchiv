@@ -39,7 +39,7 @@ Electronic Document Archive
     <div class="col fullwidth center" align="center">
       <form action="/upload" method="post">
       <div class="form-group">
-        <input type="file" accept="pdf" class="fullwidth" autofocus="autofocus" id="data" name="data" />
+        <input type="file" accept=".pdf" multiple class="fullwidth" autofocus="autofocus" id="data" name="data" />
         </div>
         
         <input type="submit" formenctype="multipart/form-data" class="btn btn-primary" value="Upload" />
@@ -48,7 +48,7 @@ Electronic Document Archive
     </div>
   </div>
 </div>
-  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/bootstrap.min.js"></script>
 </body>
 </html>
 

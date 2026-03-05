@@ -266,7 +266,7 @@ Electronic Document Archive v[% version %]
 </footer>
 
 
-    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
   <script type="text/javascript">
     function idToDate(id) {
       return new Date(parseInt(id)).toISOString().slice(0, 10);
