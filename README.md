@@ -73,6 +73,41 @@ CT → Resources → Add → Bind Mount
 
 Environment variables are configured in `/etc/eldoar.env` inside the container.
 
+### Optional: Thumbnail Caching via Reverse Proxy
+
+If you run ELDOAR behind a reverse proxy (e.g. **nginx Proxy Manager** in front of a Docker or LXC deployment), you can cache thumbnails there instead of hitting the Perl process for every `.jpg` request.
+
+In **nginx Proxy Manager**, open the proxy host → *Advanced* tab and add:
+
+```nginx
+location ~* \.jpg$ {
+    expires 30d;
+    add_header Cache-Control "public, no-transform";
+    proxy_hide_header Set-Cookie;
+}
+```
+
+For a plain **nginx** config:
+
+```nginx
+server {
+    listen 80;
+
+    location ~* \.jpg$ {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+        proxy_hide_header Set-Cookie;
+        proxy_pass http://127.0.0.1:3000;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
 ---
 
 ## Featuers / Ideas
