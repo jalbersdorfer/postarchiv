@@ -101,21 +101,11 @@ get '/file/**' => sub {
     my @foo = @{$file};
     my $filename = "" . join("/", @foo);
     debug $filename;
-
-    # Optional: set cache headers for thumbnails (.jpg)
-    # Alternatively configure this in a nginx reverse proxy:
-    #   location ~* \.(jpg|jpeg)$ {
-    #     expires 30d;
-    #     add_header Cache-Control "public, no-transform";
-    #     proxy_hide_header Set-Cookie;
-    #   }
-    # if ($filename =~ /\.jpg$/i) {
-    #     header 'Cache-Control' => 'public, max-age=2592000, no-transform';
-    #     header 'Expires'       => time2str(time + 2592000);
-    # }
-
+    
     my $home = $ENV{'ELDOAR_HOME'} || '/app';
     return send_file( "$home/$filename", system_path => 1 );
+
+    # return 'You want to download :"' . $sfoo . '"';
 };
 
 del '/file/:id' => sub {
