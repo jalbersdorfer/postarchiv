@@ -14,11 +14,32 @@
 <body>
 
 <header>
+    <div class="collapse bg-dark" id="navbarHeader">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-8 col-md-7 py-4">
+                    <h4 class="text-white">About</h4>
+                    <p class="text-muted">Electronic Document Archive</p>
+                </div>
+                <div class="col-sm-4 offset-md-1 py-4">
+                    <h4 class="text-white">Navigation</h4>
+                    <ul class="list-unstyled">
+                        <li><a href="/" class="text-white">Home</a></li>
+                        <li><a href="/upload" class="text-white">Upload</a></li>
+                        <li><a href="/admin" class="text-white">Admin</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="navbar navbar-dark bg-dark shadow-sm">
         <div class="container">
             <a href="/" class="navbar-brand d-flex align-items-center">
                 <strong>ELDOAR Admin</strong>
             </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarHeader" aria-controls="navbarHeader" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
         </div>
     </div>
 </header>
@@ -67,9 +88,10 @@ Electronic Document Archive - Admin
     </section>
 </main>
 
-<footer class="text-muted py-5">
-    <div class="container">
-        <p class="mb-1">ELDOAR Search &copy; 2024</p>
+<footer class="text-muted py-3 border-top">
+    <div class="container d-flex justify-content-between align-items-center">
+        <small>ELDOAR &copy; 2020&ndash;2026</small>
+        <a href="https://github.com/jalbersdorfer/postarchiv" class="text-muted small" target="_blank">GitHub</a>
     </div>
 </footer>
 

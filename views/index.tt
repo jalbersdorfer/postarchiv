@@ -139,11 +139,11 @@
           <p class="text-muted">Search your PDF Documents</p>
         </div>
         <div class="col-sm-4 offset-md-1 py-4">
-          <h4 class="text-white">Contact</h4>
+          <h4 class="text-white">Navigation</h4>
           <ul class="list-unstyled">
-            <li><a href="#" class="text-white">Follow on Twitter</a></li>
-            <li><a href="#" class="text-white">Like on Facebook</a></li>
-            <li><a href="#" class="text-white">Email me</a></li>
+            <li><a href="/" class="text-white">Home</a></li>
+            <li><a href="/upload" class="text-white">Upload</a></li>
+            <li><a href="/admin" class="text-white">Admin</a></li>
           </ul>
         </div>
       </div>
@@ -255,13 +255,10 @@ Electronic Document Archive v[% version %]
 
 </main>
 
-<footer class="text-muted py-5">
-  <div class="container">
-    <p class="float-end mb-1">
-      <a href="#">Back to top</a>
-    </p>
-    <p class="mb-1">ELDOAR Search is &copy; Bootstrap, but please download and customize it for yourself!</p>
-    <p class="mb-0">Get Source? <a href="/">Visit the homepage</a> or read our <a href="../getting-started/introduction/">getting started guide</a>.</p>
+<footer class="text-muted py-3 border-top">
+  <div class="container d-flex justify-content-between align-items-center">
+    <small>ELDOAR &copy; 2020&ndash;2026</small>
+    <a href="https://github.com/jalbersdorfer/postarchiv" class="text-muted small" target="_blank">GitHub</a>
   </div>
 </footer>
 
